@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ローンチャート — 金利が上がったら、うちの返済は？</title>
+<meta name="description" content="広告のない住宅ローン計算。変動金利が上がったときの返済額、5年ルール・125%ルール、繰上げ返済がわかります。いまは試作版です。">
+<meta name="referrer" content="no-referrer">
+<style>
+  :root {
+    --bg: #f6faf9;
+    --surface: #ffffff;
+    --ink: #142120;
+    --muted: #4a5d5b;
+    --line: #d3dedc;
+    --accent: #0d5c58;
+    --accent-soft: #d7ecea;
+    --radius: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1716;
+      --surface: #172221;
+      --ink: #e4efed;
+      --muted: #a3b8b5;
+      --line: #2c3c3a;
+      --accent: #7fcbc4;
+      --accent-soft: #1f3836;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.8 system-ui, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  header { padding: 22px 0; }
+  .logo { font-weight: 700; font-size: 20px; letter-spacing: -0.01em; color: var(--accent); text-decoration: none; }
+
+  .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; padding-top: 40px; padding-bottom: 72px; }
+  .badge { display: inline-block; font-size: 14px; color: var(--accent); background: var(--accent-soft); padding: 4px 12px; border-radius: 999px; margin-bottom: 20px; }
+  h1 { font-size: clamp(36px, 6vw, 56px); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 20px; }
+  .lead { font-size: 19px; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
+  .promise { font-weight: 600; color: var(--ink); }
+  .btn { display: inline-block; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; padding: 14px 26px; border-radius: 999px; border: 0; font-size: 17px; cursor: pointer; }
+  .btn-outline { background: transparent; color: var(--accent); border: 2px solid var(--accent); padding: 12px 24px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .phone { width: 100%; max-width: 320px; margin: 0 auto; border-radius: 28px; border: 1px solid var(--line); overflow: hidden; background: var(--surface); box-shadow: 0 12px 40px -12px rgba(0, 40, 38, 0.18); }
+  .phone img { display: block; width: 100%; height: auto; }
+
+  section { padding: 64px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: clamp(26px, 4vw, 34px); line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 12px; }
+  .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .feature.flip .text { order: 2; }
+  .feature p { color: var(--muted); margin: 0 0 14px; }
+  .example { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin-top: 18px; }
+  .example strong { color: var(--accent); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  ul.checks { list-style: none; padding: 0; margin: 18px 0 0; }
+  ul.checks li { padding-left: 30px; position: relative; margin-bottom: 8px; }
+  ul.checks li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+  .building { text-align: center; max-width: 640px; margin: 0 auto; }
+  .building p { color: var(--muted); }
+
+  form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; max-width: 680px; margin: 32px auto 0; }
+  fieldset { border: 0; padding: 0; margin: 0 0 26px; }
+  legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; margin: 6px 0; }
+  .opt input { margin-top: 6px; accent-color: var(--accent); }
+  label.block { display: block; font-weight: 600; margin-bottom: 8px; }
+  .hint { font-weight: 400; color: var(--muted); font-size: 15px; }
+  input[type=text], input[type=email], textarea {
+    width: 100%; font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  .hidden { position: absolute; left: -9999px; }
+  .privacy { font-size: 15px; color: var(--muted); margin: 18px 0 0; }
+
+  footer { padding: 40px 0 56px; color: var(--muted); font-size: 15px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .hero, .feature { grid-template-columns: 1fr; gap: 32px; }
+    .feature.flip .text { order: 0; }
+    .hero { padding-top: 16px; padding-bottom: 48px; }
+    section { padding: 48px 0; }
+    form { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <a class="logo" href="/ja/">ローンチャート</a>
+</header>
+
+<main>
+  <div class="wrap" style="padding-top:24px;padding-bottom:48px;max-width:760px">
+    <span class="badge">試作版・ウェブで使えます</span>
+    <h1>金利が上がったら、<br>うちの返済は？</h1>
+    <p class="lead">変動金利が「6年目から 1.5%」になったら、毎月の返済はいくらになるのか。5年ルール・125%ルールがあるとどうなるのか。繰上げ返済でどれだけ減るのか。数字で確かめられる住宅ローン計算です。<span class="promise">広告はありません。</span></p>
+    <div class="actions">
+      <a class="btn" href="/ja/app/">ウェブ版を使ってみる</a>
+      <a class="btn btn-outline" href="#survey">アンケートに答える</a>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap" style="max-width:760px">
+      <h2>できること</h2>
+      <ul class="checks">
+        <li>借入額・金利・期間から、毎月の返済額と利息の合計</li>
+        <li>金利が変わる見通しを何行でも入れて、返済額がいつ・いくらに変わるか</li>
+        <li>5年ルール・125%ルールのあり・なし。返しきれない利息（未払利息）が出るときは知らせます</li>
+        <li>繰上げ返済（期間短縮・返済額軽減）、ボーナス返済、元利均等・元金均等</li>
+        <li>年ごとの返済予定表と、残高のグラフ</li>
+      </ul>
+      <div class="example">例：3,000万円・0.5%・35年で毎月 <strong>77,875円</strong>。6年目から 1.5% に上がると、<strong>89,830円</strong>に。利息の合計は 270.8万円から <strong>701.1万円</strong>に増えます。</div>
+      <p style="color:var(--muted);margin-top:18px">広告・利用状況の送信・アカウントはありません。入力は、お使いのブラウザの中だけに保存されます。銀行やローンの紹介もしません。</p>
+    </div>
+  </section>
+
+  <section id="survey">
+    <div class="wrap">
+      <div class="building">
+        <h2>使ってみた感想を聞かせてください</h2>
+        <p>スマホのアプリを作る前に、住宅ローンを考えている人・返している人の声を集めています。どれも任意です。2〜3分で終わります。</p>
+      </div>
+
+      <form name="needs-ja" method="POST" action="/ja/thanks.html" data-netlify="true" netlify-honeypot="company">
+        <input type="hidden" name="form-name" value="needs-ja">
+        <p class="hidden"><label>ここは空のままにしてください <input name="company"></label></p>
+        <input type="hidden" name="from" id="from" value="">
+
+        <fieldset>
+          <legend>いまの状況は？</legend>
+          <label class="opt"><input type="radio" name="situation" value="buying-home"> これから家を買う</label>
+          <label class="opt"><input type="radio" name="situation" value="paying-mortgage"> 住宅ローンを返している</label>
+          <label class="opt"><input type="radio" name="situation" value="refinancing"> 借り換えを考えている</label>
+          <label class="opt"><input type="radio" name="situation" value="other"> その他</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>金利のタイプは？</legend>
+          <label class="opt"><input type="radio" name="rate-type" value="variable"> 変動金利</label>
+          <label class="opt"><input type="radio" name="rate-type" value="fixed-period"> 固定期間選択型（10年固定など）</label>
+          <label class="opt"><input type="radio" name="rate-type" value="fixed"> 全期間固定（フラット35など）</label>
+          <label class="opt"><input type="radio" name="rate-type" value="undecided"> まだ決めていない・わからない</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>いま、ローンの計算に何を使っていますか？（いくつでも）</legend>
+          <label class="opt"><input type="checkbox" name="uses-now" value="app"> スマホのアプリ</label>
+          <label class="opt"><input type="checkbox" name="uses-now" value="bank-site"> 銀行のサイト</label>
+          <label class="opt"><input type="checkbox" name="uses-now" value="ai-chatbot"> AI（ChatGPT、Gemini など）</label>
+          <label class="opt"><input type="checkbox" name="uses-now" value="spreadsheet"> 表計算（Excel など）</label>
+          <label class="opt"><input type="checkbox" name="uses-now" value="nothing"> 特に使っていない</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>スマホのアプリで使いたいものは？（いくつでも）</legend>
+          <label class="opt"><input type="checkbox" name="wants" value="rate-rise"> 金利が上がったときの返済</label>
+          <label class="opt"><input type="checkbox" name="wants" value="prepay"> 繰上げ返済</label>
+          <label class="opt"><input type="checkbox" name="wants" value="save-today"> ローンを保存して、今日の残高を見る</label>
+          <label class="opt"><input type="checkbox" name="wants" value="compare"> 変動と固定・銀行どうしを比べる</label>
+          <label class="opt"><input type="checkbox" name="wants" value="tax-credit"> 住宅ローン控除の見込み</label>
+          <label class="opt"><input type="checkbox" name="wants" value="housing-costs"> 管理費・修繕積立金・固定資産税を含めた毎月の住まいの費用</label>
+          <label class="opt"><input type="checkbox" name="wants" value="borrowable"> 毎月払える額から、借りられる額</label>
+        </fieldset>
+
+        <p>
+          <label class="block" for="feedback">ウェブ版を使ってみて、わかりにくかったこと・足りないこと <span class="hint">使っていなくても、ふだん困っていることでも</span></label>
+          <textarea id="feedback" name="feedback"></textarea>
+        </p>
+
+        <p>
+          <label class="block" for="email">メールアドレス <span class="hint">（任意）アプリが出たときに一度だけお知らせします</span></label>
+          <input id="email" type="email" name="email" autocomplete="email">
+        </p>
+
+        <button class="btn" type="submit">送る</button>
+
+        <p class="privacy">このページには Cookie・アクセス解析・追跡のスクリプトはありません。メールアドレスは、アプリが出たときのお知らせに一度だけ使い、売ったり他の目的に使ったりしません。</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    ローンチャートは計算の道具で、お金を貸す会社ではありません。回答を、ローンを売る会社に渡すこともしません。 · <a href="/" style="color:inherit">English</a>
+  </div>
+</footer>
+
+<script>
+  // どのリンクから来たか（?from=…）だけを記録します。Cookie もなく、ほかへは何も送りません。
+  (function () {
+    var f = new URLSearchParams(location.search).get("from");
+    if (f) document.getElementById("from").value = f.slice(0, 40);
+  })();
+</script>
+</body>
+</html>
